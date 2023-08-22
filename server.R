@@ -183,13 +183,13 @@ fig_exponential_OS = ggplot(data = dataCompOS,aes(time, survival, color = "CompO
   labs(color ="Intervention")
 
 #rayleigh models
-prayleigh = function(x,sigma){
-  return(1-exp(-(x^2)/(2*sigma^2)))
+prayleigh = function(x,sigma2){
+  return(1-exp(-(x^2)/(2*sigma2)))
 }
 
 rayleigh_estimate <- function(df){
-  params = mean(exp(log(-log(df$survival))-2*log(df$time))/2-log(sqrt(2))) 
-  return(c(sigma = params))
+  params = mean(-df$time^2/(2*log(df$survival))) 
+  return(c(sigma2 = params))
 }
 
 rayleigh_cost = function(params){
@@ -273,6 +273,8 @@ shinyServer(function(input, output) {
         return(fig_loglogistic_PFS)
       } else if(input$dist == "Exponential"){
         return(fig_exponential_PFS)
+      } else if(input$dist == "Rayleigh"){
+        return(fig_rayleigh_PFS)
       }
     })
     
@@ -283,12 +285,18 @@ shinyServer(function(input, output) {
         return (fig_loglogistic_OS)
       } else if(input$dist == "Exponential"){
         return(fig_exponential_OS)
+      } else if(input$dist == "Rayleigh"){
+        return(fig_rayleigh_OS)
       }
     })
     
     output$modelTablePFS <- renderUI({
       if(input$dist == "Weibull"){
         tags$table(
+          tags$style(
+          "table{
+            width: 100%
+          }"),
           tags$tr(
             tags$th("Parameter"),
             tags$th("Estimate"),
@@ -322,14 +330,236 @@ shinyServer(function(input, output) {
           )
         )  
       } else if(input$dist == "Log-logistic"){
-        
+        tags$table(
+          tags$style(
+          "table{
+            width: 100%
+          }"),
+          tags$tr(
+            tags$th("Parameter"),
+            tags$th("Estimate"),
+            tags$th("Standard Error"),
+          ),
+          tags$tr(
+            tags$td("Non-intervention")
+          ),
+          tags$tr(
+            tags$td("alpha"),
+            tags$td(model_loglogistic_compPFS["alpha"]),
+            tags$td("TODO")
+          ),
+          tags$tr(
+            tags$td("lambda"),
+            tags$td(model_loglogistic_compPFS["lambda"]),
+            tags$td("TODO")
+          ),
+          tags$tr(
+            tags$td("Intervention")
+          ),
+          tags$tr(
+            tags$td("alpha"),
+            tags$td(model_loglogistic_PFS["alpha"]),
+            tags$td("TODO")
+          ),
+          tags$tr(
+            tags$td("lambda"),
+            tags$td(model_loglogistic_PFS["lambda"]),
+            tags$td("TODO")
+          )
+        ) 
       } else if(input$dist == "Exponential"){
-        
+        tags$table(
+          tags$style(
+          "table{
+            width: 100%
+          }"),
+          tags$tr(
+            tags$th("Parameter"),
+            tags$th("Estimate"),
+            tags$th("Standard Error"),
+          ),
+          tags$tr(
+            tags$td("Non-intervention")
+          ),
+          tags$tr(
+            tags$td("lambda"),
+            tags$td(model_exponential_compPFS["lambda"]),
+            tags$td("TODO")
+          ),
+          tags$tr(
+            tags$td("Intervention")
+          ),
+          tags$tr(
+            tags$td("lambda"),
+            tags$td(model_exponential_PFS["lambda"]),
+            tags$td("TODO")
+          )
+        )
+      } else if(input$dist == "Rayleigh"){
+        tags$table(
+          tags$style(
+          "table{
+            width: 100%
+          }"),
+          tags$tr(
+            tags$th("Parameter"),
+            tags$th("Estimate"),
+            tags$th("Standard Error"),
+          ),
+          tags$tr(
+            tags$td("Non-intervention")
+          ),
+          tags$tr(
+            tags$td("sigma2"),
+            tags$td(model_rayleigh_compPFS["sigma2"]),
+            tags$td("TODO")
+          ),
+          tags$tr(
+            tags$td("Intervention")
+          ),
+          tags$tr(
+            tags$td("sigma2"),
+            tags$td(model_rayleigh_PFS["sigma2"]),
+            tags$td("TODO")
+          )
+        ) 
       }
     })
     
-    output$modelTableOS <- renderTable({
-      
+    output$modelTableOS <- renderUI({
+      if(input$dist == "Weibull"){
+        tags$table(
+          tags$style(
+          "table{
+            width: 100%
+          }"),
+          tags$tr(
+            tags$th("Parameter"),
+            tags$th("Estimate"),
+            tags$th("Standard Error"),
+          ),
+          tags$tr(
+            tags$td("Non-intervention")
+          ),
+          tags$tr(
+            tags$td("k"),
+            tags$td(model_weibull_compOS["k"]),
+            tags$td("TODO")
+          ),
+          tags$tr(
+            tags$td("lambda"),
+            tags$td(model_weibull_compOS["lambda"]),
+            tags$td("TODO")
+          ),
+          tags$tr(
+            tags$td("Intervention")
+          ),
+          tags$tr(
+            tags$td("k"),
+            tags$td(model_weibull_OS["k"]),
+            tags$td("TODO")
+          ),
+          tags$tr(
+            tags$td("lambda"),
+            tags$td(model_weibull_OS["lambda"]),
+            tags$td("TODO")
+          )
+        )  
+      } else if(input$dist == "Log-logistic"){
+        tags$table(
+          tags$style(
+          "table{
+            width: 100%
+          }"),
+          tags$tr(
+            tags$th("Parameter"),
+            tags$th("Estimate"),
+            tags$th("Standard Error"),
+          ),
+          tags$tr(
+            tags$td("Non-intervention")
+          ),
+          tags$tr(
+            tags$td("alpha"),
+            tags$td(model_loglogistic_compOS["alpha"]),
+            tags$td("TODO")
+          ),
+          tags$tr(
+            tags$td("lambda"),
+            tags$td(model_loglogistic_compOS["lambda"]),
+            tags$td("TODO")
+          ),
+          tags$tr(
+            tags$td("Intervention")
+          ),
+          tags$tr(
+            tags$td("alpha"),
+            tags$td(model_loglogistic_OS["alpha"]),
+            tags$td("TODO")
+          ),
+          tags$tr(
+            tags$td("lambda"),
+            tags$td(model_loglogistic_OS["lambda"]),
+            tags$td("TODO")
+          )
+        ) 
+      } else if(input$dist == "Exponential"){
+        tags$table(
+          tags$style(
+          "table{
+            width: 100%
+          }"),
+          tags$tr(
+            tags$th("Parameter"),
+            tags$th("Estimate"),
+            tags$th("Standard Error"),
+          ),
+          tags$tr(
+            tags$td("Non-intervention")
+          ),
+          tags$tr(
+            tags$td("lambda"),
+            tags$td(model_exponential_compOS["lambda"]),
+            tags$td("TODO")
+          ),
+          tags$tr(
+            tags$td("Intervention")
+          ),
+          tags$tr(
+            tags$td("lambda"),
+            tags$td(model_exponential_OS["lambda"]),
+            tags$td("TODO")
+          )
+        )
+      } else if(input$dist == "Rayleigh"){
+        tags$table(
+          tags$style(
+          "table{
+            width: 100%
+          }"),
+          tags$tr(
+            tags$th("Parameter"),
+            tags$th("Estimate"),
+            tags$th("Standard Error"),
+          ),
+          tags$tr(
+            tags$td("Non-intervention")
+          ),
+          tags$tr(
+            tags$td("sigma2"),
+            tags$td(model_rayleigh_compOS["sigma2"]),
+            tags$td("TODO")
+          ),
+          tags$tr(
+            tags$td("Intervention")
+          ),
+          tags$tr(
+            tags$td("sigma2"),
+            tags$td(model_rayleigh_OS["sigma2"]),
+            tags$td("TODO")
+          )
+        ) 
+      }
     })
     
     #exploratory data analysis
@@ -412,7 +642,7 @@ shinyServer(function(input, output) {
               uiOutput("modelTablePFS")
             },
             if(input$dataset %in% c("All data", "Overall survival")){
-              tableOutput("modelTableOS")
+              uiOutput("modelTableOS")
             }
           )
         }
